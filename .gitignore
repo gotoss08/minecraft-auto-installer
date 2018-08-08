@@ -1,0 +1,6 @@
+*.exe
+*.zip
+*.jar
+__pycache__
+*.pyc
+server/libraries
