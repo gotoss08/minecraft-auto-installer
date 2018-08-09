@@ -4,3 +4,7 @@
 __pycache__
 *.pyc
 server/libraries
+server
+!server/server.properties
+!server/*.bat
+!server/eula.txt

@@ -1,9 +1,11 @@
 from util import *
+import sys
 
 HOME_PATH = Path.home()
 MINECRAFT_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft')
+MINECRAFT_OPTIONS_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft/options.txt')
 MINECRAFT_MODS_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft/mods')
-MINECRAFT_CONFIG_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft/config')
+MINECRAFT_CONFIGS_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft/config')
 MINECRAFT_LIBS_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft/libraries')
 MINECRAFT_LOGS_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft/logs')
 MINECRAFT_RESOURCEPACKS_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft/resourcepacks')
@@ -11,7 +13,7 @@ MINECRAFT_RESOURCEPACKS_PATH = HOME_PATH.joinpath('AppData/Roaming/.minecraft/re
 def normalize_folder_structure():
     print('normalizing folder structure...')
     remove_folder(str(MINECRAFT_MODS_PATH))
-    remove_folder(str(MINECRAFT_CONFIG_PATH))
+    remove_folder(str(MINECRAFT_CONFIGS_PATH))
     # remove_folder(str(MINECRAFT_LIBS_PATH))
     # remove_folder(str(MINECRAFT_LOGS_PATH))
     remove_folder(str(MINECRAFT_RESOURCEPACKS_PATH))
@@ -42,6 +44,41 @@ def install_mods():
     copy_file(TEXTURE_PACK_ADDON_NAME, str(MINECRAFT_RESOURCEPACKS_PATH))
     print('installing mods finished')
 
-download_mods()
-normalize_folder_structure()
-install_mods()
+def update_configs():
+    if not MINECRAFT_OPTIONS_PATH.exists():
+        print('options.txt does not exists. Please launch Minecraft first.')
+        sys.exit()
+
+    optionsLines = []
+
+    resourcePacksStr = '["SphaxTFC.128x.zip","SphaxPureBDcraft64xMC17.zip"]'
+    langStr = 'en_US'
+
+    args = ['"SphaxTFC.128x.zip"', '"SphaxPureBDcraft64xMC17.zip"']
+    print(args)
+
+    f = open(str(MINECRAFT_OPTIONS_PATH), 'r')
+    for line in f:
+        paramArr = line.split(':')
+        paramStr = ''
+
+        paramName = paramArr[0].strip()
+        paramValue = paramArr[1].strip()
+
+        if paramName == 'lang':
+            paramValue = langStr
+        if paramName == 'resourcePacks':
+            paramValue = resourcePacksStr
+
+        paramStr = '{}:{}\n'.format(paramName, paramValue)
+
+        optionsLines.append(paramStr)
+
+        print(paramStr, end='')
+    f.close()
+
+
+# download_mods()
+# normalize_folder_structure()
+# install_mods()
+update_configs()
