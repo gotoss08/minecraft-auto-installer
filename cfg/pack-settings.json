@@ -1,0 +1,18 @@
+{
+    "mods": [
+        "https://minecraft.curseforge.com/projects/notenoughitems/files/2302312/download",
+        "https://minecraft.curseforge.com/projects/codechickencore/files/2262089/download",
+        "https://minecraft.curseforge.com/projects/journeymap/files/2367915/download",
+        "https://minecraft.curseforge.com/projects/hdtext/files/2311928/download"
+    ],
+    "resourcepacks": [
+        {
+            "name": "SphaxPureBDcraft64xMC17.zip",
+            "url": "http://www.creeperrepo.net/direct/sphax/028a58c7771f79e15cd878a95df52837/Sphax%20PureBDcraft%20%2064x%20MC17.zip"
+        },
+        {
+            "name": "SphaxPureBDcraft64xMC17_TFC.zip",
+            "url": "https://github.com/KillAshley/SphaxTFC/releases/download/0.1/SphaxTFC.64x.zip"
+        }
+    ]
+}

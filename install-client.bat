@@ -1,3 +1,1 @@
-pip install requests
-python do.py
-PAUSE
+python src/app.py

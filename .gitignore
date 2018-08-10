@@ -8,3 +8,5 @@ server
 !server/server.properties
 !server/*.bat
 !server/eula.txt
+*.sublime-workspace
+*.sublime-project
