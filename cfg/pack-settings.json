@@ -3,9 +3,16 @@
         "https://minecraft.curseforge.com/projects/notenoughitems/files/2302312/download",
         "https://minecraft.curseforge.com/projects/codechickencore/files/2262089/download",
         "https://minecraft.curseforge.com/projects/journeymap/files/2367915/download",
-        "https://minecraft.curseforge.com/projects/hdtext/files/2311928/download"
+        "https://minecraft.curseforge.com/projects/mouse-tweaks/files/2209265/download",
+        "https://minecraft.curseforge.com/projects/inventory-tweaks/files/2210792/download",
+        "https://minecraft.curseforge.com/projects/waila/files/2230518/download",
+        "https://minecraft.curseforge.com/projects/wawla-what-are-we-looking-at/files/2298772/download"
     ],
     "resourcepacks": [
+        {
+            "name": "HDTEXT+1.1.zip",
+            "url": "https://minecraft.curseforge.com/projects/hdtext/files/2311928/download"
+        },
         {
             "name": "SphaxPureBDcraft64xMC17.zip",
             "url": "http://www.creeperrepo.net/direct/sphax/028a58c7771f79e15cd878a95df52837/Sphax%20PureBDcraft%20%2064x%20MC17.zip"
