@@ -4,8 +4,7 @@ from pathlib import Path
 from sys import exit
 from os import chdir
 from os import remove as rmfile
-from shutil import copyfile
-from shutil import rmtree
+from shutil import copyfile, copytree, rmtree
 from os.path import exists
 
 from json import load as jsload
@@ -15,7 +14,12 @@ import requests
 import gdrive
 import zipfile
 
-MINECRAFT_PATH = Path.home().joinpath('AppData/Roaming/.minecraft/')
+import util
+
+LOCAL_VENDOR_PATH = Path('vendor').resolve()
+LOCAL_VENDOR_CONFIG_PATH = LOCAL_VENDOR_PATH.joinpath('config')
+
+MINECRAFT_PATH = Path.home().joinpath('AppData/Roaming/.minecraft/').resolve()
 MINECRAFT_OPTIONS_PATH = Path.home().joinpath('AppData/Roaming/.minecraft/options.txt')
 MINECRAFT_MODS_PATH = Path.home().joinpath('AppData/Roaming/.minecraft/mods/')
 MINECRAFT_CONFIG_PATH = Path.home().joinpath('AppData/Roaming/.minecraft/config/')
@@ -24,15 +28,20 @@ MINECRAFT_RESOURCEPACKS_PATH = Path.home().joinpath('AppData/Roaming/.minecraft/
 local_info_path = Path('cfg/local-info.json')
 local_info = {
     "installed_mods": {},
-    "installed_resourcepacks": []
+    "installed_resourcepacks": {}
 }
+
 
 def update_local_info():
     with open(local_info_path.resolve(), 'w') as local_info_file:
-        jsdump(local_info, local_info_file)
+        jsdump(local_info, local_info_file, indent=4)
+
 
 pack_settings_path = Path('cfg/pack-settings.json')
 pack_settings = None
+
+
+minecraft_options = util.Options(MINECRAFT_OPTIONS_PATH)
 
 
 def load_cfg():
@@ -58,9 +67,7 @@ def load_cfg():
         pack_settings = jsload(psfile)
 
 
-def install_client():
-    print('Installing client.')
-
+def install_mods():
     # download mods
     mods_dir_path = Path('mods')
     mods_dir_path.mkdir(exist_ok=True)
@@ -131,12 +138,6 @@ def install_client():
 
     to_remove_local_mods = []
 
-    for mod_obj in pack_settings['mods']:
-        if type(mod_obj) == type(''):
-            pass
-        elif type(mod_obj) == type({}):
-            pass
-
     for mod_url_raw in local_info_mods:
         mod_url = mod_url_raw.strip()
         found = False
@@ -152,20 +153,24 @@ def install_client():
                     break
 
         if not found:
-            print('removing {}'.format(mod_url))
             to_remove_local_mods.append(mod_url_raw)
 
     for to_remove_mod in to_remove_local_mods:
         del local_info_mods[to_remove_mod]
 
     # install mods
-    if MINECRAFT_MODS_PATH.exists():
-        rmtree(str(MINECRAFT_MODS_PATH))
-
     try:
+        if MINECRAFT_MODS_PATH.exists():
+            rmtree(MINECRAFT_MODS_PATH)
         MINECRAFT_MODS_PATH.mkdir()
+
+        if MINECRAFT_CONFIG_PATH.exists():
+            rmtree(MINECRAFT_CONFIG_PATH)
+
+        copytree(LOCAL_VENDOR_CONFIG_PATH, MINECRAFT_CONFIG_PATH)
+
     except PermissionError:
-        print('!!!Close mods folder and try again!!!')
+        print('***!!!Close .minecraft folder and all .minecraft subdirectories and try again!!!***')
 
     for mod_url in local_info_mods:
         mod_name = local_info_mods[mod_url]
@@ -177,14 +182,100 @@ def install_client():
             continue
 
     chdir('..')
-
     update_local_info()
 
+
+def install_resourcepacs():
+    # download resourcepacks
+    resourcepacks_dir_path = Path('resourcepacks')
+    resourcepacks_dir_path.mkdir(exist_ok=True)
+
+    local_info_resourcepacks = local_info['installed_resourcepacks']
+
+    chdir(resourcepacks_dir_path.resolve())
+
+    for rp_obj in pack_settings['resourcepacks']:
+        rp_name = rp_obj['name']
+        rp_url = rp_obj['url']
+
+        rp_path = Path(rp_name)
+        if rp_path.exists():
+            print(f'Resourcepack "{rp_name}" already downloaded.')
+            local_info_resourcepacks[rp_url] = rp_name
+            continue
+
+        print(f'Downloading "{rp_name}" from "{rp_url}"')
+
+        r = requests.get(rp_url)
+        Path(rp_name).write_bytes(r.content)
+        print(f'Downloaded "{rp_name}"')
+        local_info_resourcepacks[rp_url] = rp_name
+
+        chdir('..')
+        update_local_info()
+        chdir(resourcepacks_dir_path)
+
+    to_remove_local_resourcepacks = []
+
+    for local_rp_url in local_info_resourcepacks:
+        found = False
+
+        for rp_obj in pack_settings['resourcepacks']:
+            rp_url = rp_obj['url']
+            if local_rp_url == rp_url:
+                found = True
+
+        if not found:
+            to_remove_local_resourcepacks.append(rp_url)
+
+    for to_remove_rp in to_remove_local_resourcepacks:
+        del local_info_resourcepacks[to_remove_rp]
+
+    # install resourcepacks
+    if MINECRAFT_RESOURCEPACKS_PATH.exists():
+        rmtree(MINECRAFT_RESOURCEPACKS_PATH)
+    MINECRAFT_RESOURCEPACKS_PATH.mkdir()
+
+    for local_rp_url in local_info_resourcepacks:
+        local_rp_name = local_info_resourcepacks[local_rp_url]
+        copyfile(Path(local_rp_name), MINECRAFT_RESOURCEPACKS_PATH.joinpath(local_rp_name))
+
+
+    chdir('..')
+    update_local_info()
+
+
+def install_client():
+    print('Installing client...')
+
+    install_mods()
+    install_resourcepacs()
+
     # update .minecraft/options.txt
+    minecraft_options_resourcepacks_str = '['
+
+    resourcepack_index = 0
+    resourcepacks_length = len(pack_settings['resourcepacks'])
+
+    for resourcepack_obj in pack_settings['resourcepacks']:
+        resourcepack_name = resourcepack_obj['name']
+        minecraft_options_resourcepacks_str += f'"{resourcepack_name}"'
+
+        if resourcepack_index < resourcepacks_length - 1:
+            minecraft_options_resourcepacks_str += ','
+        resourcepack_index += 1
+
+    minecraft_options_resourcepacks_str += ']'
+
+    minecraft_options.set('resourcePacks', minecraft_options_resourcepacks_str)
+    minecraft_options.save()
+
+    print('Client installed.')
 
 
 def install_server():
-    print('Installing server.')
+    print('Installing server...')
+    print('Server installed.')
 
 
 def main():

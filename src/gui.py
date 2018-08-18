@@ -20,7 +20,7 @@ class GuiApp():
         self.root.update()
 
     def add_button(self, id, text, command):
-        button = tk.Button(self.root, padx=25, pady=25, text=text, command=command)
+        button = tk.Button(self.root, padx=10, pady=5, text=text, command=command)
         button.pack(padx=10, pady=5, expand='true', fill=tk.BOTH)
         self.buttons[id] = button
 
