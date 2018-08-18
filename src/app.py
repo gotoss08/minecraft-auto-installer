@@ -110,7 +110,6 @@ def install_client():
             if simple_obj:
                 mod_name = str(r.url).split('/')[-1]
 
-            print(mod_name)
             Path(mod_name).write_bytes(r.content)
 
             if zip_type: # if file zipped
@@ -123,12 +122,9 @@ def install_client():
                 rmfile(Path(zip_obj['name']))
 
         print('Downloaded "{}"'.format(mod_name))
-
-        print('adding {} from {}'.format(mod_name, mod_url))
         local_info_mods[mod_url] = mod_name
-        print(local_info_mods)
 
-        # to speed up debug
+        # to speed up debugging
         chdir('..')
         update_local_info()
         chdir('./mods/')
@@ -140,7 +136,6 @@ def install_client():
             pass
         elif type(mod_obj) == type({}):
             pass
-
 
     for mod_url_raw in local_info_mods:
         mod_url = mod_url_raw.strip()
@@ -159,14 +154,6 @@ def install_client():
         if not found:
             print('removing {}'.format(mod_url))
             to_remove_local_mods.append(mod_url_raw)
-
-
-
-    # for mod_url_raw in local_info_mods:
-    #     mod_url = mod_url_raw.strip()
-    #     if mod_url not in pack_settings['mods']:
-    #         print('removing {}'.format(mod_url))
-    #         to_remove_local_mods.append(mod_url_raw)
 
     for to_remove_mod in to_remove_local_mods:
         del local_info_mods[to_remove_mod]
