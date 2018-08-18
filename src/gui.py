@@ -1,5 +1,6 @@
 import tkinter as tk
 from subprocess import call
+from threading import Thread
 
 
 class GuiApp():
@@ -7,6 +8,7 @@ class GuiApp():
         self.root = tk.Tk()
         self.buttons = {}
         self.add_button('install_client_b', 'Install client', self.installClientCallback)
+        self.clientThread = None
         self.add_button('install_server_b', 'Install server', self.installServerCallback)
         self.add_button('run_server_b', 'Run server', self.runServerCallback)
 
@@ -27,15 +29,20 @@ class GuiApp():
     def get_button(self, id):
         return self.buttons[id]
 
-    def installClientCallback(self):
+    def installClient(self):
         self.update_status('Installing client...')
         self.root.update()
         call('install-client.bat')
         self.update_status('Client installed.', 'green')
 
+    def installClientCallback(self):
+        if not self.clientThread or not self.clientThread.is_alive():
+            self.clientThread = Thread(None, self.installClient)
+            self.clientThread.start()
+
     def installServerCallback(self):
         self.update_status('Installing server...')
-        call(['install-client.bat', '--server'])
+        call(['install-server.bat'])
         self.update_status('Server installed.', 'green')
 
     def runServerCallback(self):
