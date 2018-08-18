@@ -10,3 +10,4 @@ server
 !server/eula.txt
 *.sublime-workspace
 *.sublime-project
+cfg/local-info.cfg
