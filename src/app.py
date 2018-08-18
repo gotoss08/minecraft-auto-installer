@@ -3,6 +3,7 @@ import argparse
 from pathlib import Path
 from sys import exit
 from os import chdir
+from os import remove as rmfile
 from shutil import copyfile
 from shutil import rmtree
 from os.path import exists
@@ -11,6 +12,8 @@ from json import load as jsload
 from json import dump as jsdump
 
 import requests
+import gdrive
+import zipfile
 
 MINECRAFT_PATH = Path.home().joinpath('AppData/Roaming/.minecraft/')
 MINECRAFT_OPTIONS_PATH = Path.home().joinpath('AppData/Roaming/.minecraft/options.txt')
@@ -66,32 +69,104 @@ def install_client():
 
     chdir(mods_dir_path.resolve())
 
-    for mod_url_raw in pack_settings['mods']:
-        mod_url = mod_url_raw.strip()
+    for mod_obj in pack_settings['mods']:
+        simple_obj = True
+        gdrive_type = False
+        zip_type = False
+        zip_obj = {}
+
+        if type(mod_obj) == type(''):
+            mod_url = mod_obj.strip()
+        elif type(mod_obj) == type({}):
+            simple_obj = False
+
+            if 'gdrive' in mod_obj:
+                gdrive_type = True
+                mod_name = mod_obj['name'].strip()
+            elif 'zip' in mod_obj:
+                zip_type = True
+                zip_obj['name'] = mod_obj['zip_name']
+                zip_obj['path'] = mod_obj['zip_path']
+                mod_name = zip_obj['name'].strip()
+
+            mod_url = mod_obj['url'].strip()
 
         if mod_url in local_info_mods:
-            mod_name = local_info_mods[mod_url]
-            mod_path = Path(mod_name)
+            local_mod_name = local_info_mods[mod_url]
+            mod_path = Path(local_mod_name)
             if mod_path.exists():
-                print('Mod "{}" already downloaded.'.format(mod_name))
+                print('Mod "{}" already downloaded.'.format(local_mod_name))
                 continue
             else:
                 del local_info_mods[mod_url]
 
         print('Downloading from "{}"'.format(mod_url))
-        r = requests.get(mod_url)
-        mod_name = str(r.url).split('/')[-1]
-        print('Downloaded "{}"'.format(mod_name))
-        Path(mod_name).write_bytes(r.content)
 
+        if gdrive_type: # if gdrive url
+            gdrive.download_file_from_google_drive(mod_url, mod_name)
+        else: # if regular url
+            r = requests.get(mod_url)
+
+            if simple_obj:
+                mod_name = str(r.url).split('/')[-1]
+
+            print(mod_name)
+            Path(mod_name).write_bytes(r.content)
+
+            if zip_type: # if file zipped
+                zip_ref = zipfile.ZipFile(zip_obj['name'], 'r')
+                zip_ref.extract(zip_obj['path'])
+                zip_ref.close()
+                mod_name = mod_obj['name']
+                copyfile(Path(zip_obj['path']).resolve(), Path().cwd().joinpath(mod_name))
+                rmtree(Path(zip_obj['path']).parent)
+                rmfile(Path(zip_obj['name']))
+
+        print('Downloaded "{}"'.format(mod_name))
+
+        print('adding {} from {}'.format(mod_name, mod_url))
         local_info_mods[mod_url] = mod_name
+        print(local_info_mods)
+
+        # to speed up debug
+        chdir('..')
+        update_local_info()
+        chdir('./mods/')
 
     to_remove_local_mods = []
 
+    for mod_obj in pack_settings['mods']:
+        if type(mod_obj) == type(''):
+            pass
+        elif type(mod_obj) == type({}):
+            pass
+
+
     for mod_url_raw in local_info_mods:
         mod_url = mod_url_raw.strip()
-        if mod_url not in pack_settings['mods']:
+        found = False
+
+        for mod_obj in pack_settings['mods']:
+            if type(mod_obj) == type(''):
+                if mod_url_raw == mod_obj:
+                    found = True
+                    break
+            elif type(mod_obj) == type({}):
+                if mod_url_raw == mod_obj['url']:
+                    found = True
+                    break
+
+        if not found:
+            print('removing {}'.format(mod_url))
             to_remove_local_mods.append(mod_url_raw)
+
+
+
+    # for mod_url_raw in local_info_mods:
+    #     mod_url = mod_url_raw.strip()
+    #     if mod_url not in pack_settings['mods']:
+    #         print('removing {}'.format(mod_url))
+    #         to_remove_local_mods.append(mod_url_raw)
 
     for to_remove_mod in to_remove_local_mods:
         del local_info_mods[to_remove_mod]
@@ -115,6 +190,7 @@ def install_client():
             continue
 
     chdir('..')
+
     update_local_info()
 
     # update .minecraft/options.txt
