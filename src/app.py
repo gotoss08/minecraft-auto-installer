@@ -13,6 +13,7 @@ from json import dump as jsdump
 import requests
 import gdrive
 import zipfile
+import urllib
 
 import util
 
@@ -115,7 +116,7 @@ def install_mods():
             r = requests.get(mod_url)
 
             if simple_obj:
-                mod_name = str(r.url).split('/')[-1]
+                mod_name = urllib.parse.unquote(str(r.url)).split('/')[-1]
 
             Path(mod_name).write_bytes(r.content)
 
