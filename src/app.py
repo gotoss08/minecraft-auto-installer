@@ -17,6 +17,8 @@ import urllib
 
 import util
 
+from subprocess import call
+
 LOCAL_VENDOR_PATH = Path('vendor').resolve()
 LOCAL_VENDOR_CONFIG_PATH = LOCAL_VENDOR_PATH.joinpath('config')
 
@@ -275,7 +277,39 @@ def install_client():
 
 
 def install_server():
+
+
     print('Installing server...')
+
+    downloaded_mods_path = Path('mods').resolve()
+
+
+    chdir('server')
+    server_download_link = 'https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.7.10-10.13.4.1558-1.7.10/forge-1.7.10-10.13.4.1558-1.7.10-universal.jar'
+    server_file_name = 'forge-1.7.10-10.13.4.1558-1.7.10-universal.jar'
+    server_file_path = Path(server_file_name)
+
+    if not server_file_path.exists():
+        r = requests.get(server_download_link)
+        server_file_path.write_bytes(r.content)
+
+    call(['java', '-jar', './forge-1.7.10-10.13.4.1558-1.7.10-installer.jar', '--installServer'])
+
+    server_mods_path = Path('mods')
+    if server_mods_path.exists():
+        rmtree(server_mods_path.resolve())
+    server_mods_path.mkdir()
+
+    server_config_path = Path('config')
+    if server_config_path.exists():
+        rmtree(server_config_path.resolve())
+
+    for local_mod_url in local_info['installed_mods']:
+        if local_mod_url not in pack_settings['server_exclude_mods']:
+            local_mod_name = local_info['installed_mods'][local_mod_url]
+            local_mod_path = downloaded_mods_path.joinpath(local_mod_name)
+            copyfile(local_mod_path.resolve(), server_mods_path.joinpath(local_mod_name).resolve())
+
     print('Server installed.')
 
 
