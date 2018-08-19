@@ -60,6 +60,7 @@ class GuiApp():
 
     def runServerCallback(self):
         pass
+        # call('server/start-server_x64.bat')
         # if not self.serverThread or not self.serverThread.is_alive():
         #     self.serverThread = Thread(None, self.runServer)
         #     self.serverThread.start()

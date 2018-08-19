@@ -285,15 +285,18 @@ def install_server():
 
 
     chdir('server')
-    server_download_link = 'https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.7.10-10.13.4.1558-1.7.10/forge-1.7.10-10.13.4.1558-1.7.10-universal.jar'
-    server_file_name = 'forge-1.7.10-10.13.4.1558-1.7.10-universal.jar'
-    server_file_path = Path(server_file_name)
+    server_download_link = 'https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.7.10-10.13.4.1558-1.7.10/forge-1.7.10-10.13.4.1558-1.7.10-installer.jar'
+    server_file_name = 'forge-1.7.10-10.13.4.1558-1.7.10-installer.jar'
+    server_file_path = Path(server_file_name).resolve()
+    print(server_file_path.resolve())
 
     if not server_file_path.exists():
         r = requests.get(server_download_link)
         server_file_path.write_bytes(r.content)
+        print('downloading')
 
-    call(['java', '-jar', './forge-1.7.10-10.13.4.1558-1.7.10-installer.jar', '--installServer'])
+    print(Path.cwd())
+    call(f'java -jar {server_file_name} --installServer')
 
     server_mods_path = Path('mods')
     if server_mods_path.exists():
