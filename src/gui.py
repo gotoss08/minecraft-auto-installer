@@ -1,5 +1,5 @@
 import tkinter as tk
-from subprocess import call
+from subprocess import Popen, call
 from threading import Thread
 
 
@@ -9,8 +9,9 @@ class GuiApp():
         self.buttons = {}
         self.add_button('install_client_b', 'Install client', self.installClientCallback)
         self.clientThread = None
+        self.serverThread = None
         self.add_button('install_server_b', 'Install server', self.installServerCallback)
-        self.add_button('run_server_b', 'Run server', self.runServerCallback)
+        self.add_button('run_server_b', 'Run server(NOT WORKING)', self.runServerCallback)
 
         self.status_text = tk.StringVar()
         self.status_label = tk.Label(self.root, bd=1, relief=tk.SUNKEN, anchor=tk.W, textvariable=self.status_text)
@@ -45,11 +46,25 @@ class GuiApp():
         call(['install-server.bat'])
         self.update_status('Server installed.', 'green')
 
-    def runServerCallback(self):
+    def runServer(self):
         self.update_status('Server is running...', 'green')
         self.get_button('run_server_b')['text'] = 'Stop server'
-        self.update_status('Server stopped.', 'red')
+        self.server_proc = Popen('server/start-server_x64.bat', shell=False)
 
+    def stopServer(self):
+        self.update_status('Server stopped.', 'red')
+        self.get_button('run_server_b')['text'] = 'Start server'
+
+        if self.server_proc:
+            self.server_proc.kill()
+
+    def runServerCallback(self):
+        pass
+        # if not self.serverThread or not self.serverThread.is_alive():
+        #     self.serverThread = Thread(None, self.runServer)
+        #     self.serverThread.start()
+        # else:
+        #     self.stopServer()
 
 app = GuiApp()
 
